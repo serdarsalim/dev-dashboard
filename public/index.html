@@ -1,38 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dev-dashboard</title>
   <style>
+    :root[data-theme="dark"] {
+      --bg:           #0d0d0d;
+      --bg-hover:     #141414;
+      --bg-input:     #1a1a1a;
+      --border:       #1e1e1e;
+      --border-input: #2a2a2a;
+      --border-focus: #444;
+      --text:         #d0d0d0;
+      --text-strong:  #e8e8e8;
+      --text-muted:   #444;
+      --text-faint:   #333;
+      --dot-stopped:  #2e2e2e;
+      --btn-sec-bg:   #1a1a1a;
+      --btn-sec-border: #2a2a2a;
+      --btn-sec-color: #888;
+      --btn-sec-hover-border: #444;
+      --btn-sec-hover-color:  #ccc;
+      --icon-btn-bg:  #1c1c1c;
+      --icon-btn-border: #282828;
+      --icon-btn-color: #666;
+      --icon-btn-hover-border: #444;
+      --icon-btn-hover-color: #bbb;
+    }
+
+    :root[data-theme="light"] {
+      --bg:           #f7f7f5;
+      --bg-hover:     #f0f0ee;
+      --bg-input:     #fff;
+      --border:       #e8e8e8;
+      --border-input: #d4d4d4;
+      --border-focus: #999;
+      --text:         #444;
+      --text-strong:  #111;
+      --text-muted:   #aaa;
+      --text-faint:   #bbb;
+      --dot-stopped:  #ccc;
+      --btn-sec-bg:   #fff;
+      --btn-sec-border: #ddd;
+      --btn-sec-color: #666;
+      --btn-sec-hover-border: #999;
+      --btn-sec-hover-color:  #222;
+      --icon-btn-bg:  #fff;
+      --icon-btn-border: #e0e0e0;
+      --icon-btn-color: #888;
+      --icon-btn-hover-border: #999;
+      --icon-btn-hover-color: #222;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0d0d0d;
-      color: #d0d0d0;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
-      padding: 40px 48px;
       min-height: 100vh;
+      padding: 48px 24px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
     }
 
     header {
       display: flex;
-      align-items: baseline;
-      gap: 14px;
-      margin-bottom: 32px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
     }
 
     header h1 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-strong);
       letter-spacing: -0.01em;
     }
 
-    header span {
-      color: #444;
+    header .subtitle {
+      color: var(--text-muted);
       font-size: 12px;
+      flex: 1;
+    }
+
+    .theme-toggle {
+      background: var(--btn-sec-bg);
+      border: 1px solid var(--btn-sec-border);
+      color: var(--btn-sec-color);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--btn-sec-hover-border);
+      color: var(--btn-sec-hover-color);
     }
 
     table {
@@ -44,31 +115,29 @@
       text-align: left;
       font-size: 11px;
       font-weight: 500;
-      color: #444;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.07em;
-      padding: 0 12px 10px;
-      border-bottom: 1px solid #1e1e1e;
+      padding: 0 10px 10px;
+      border-bottom: 1px solid var(--border);
     }
 
-    thead th:last-child { text-align: right; }
-
     tbody tr {
-      border-bottom: 1px solid #161616;
+      border-bottom: 1px solid var(--border);
       transition: background 0.1s;
     }
 
-    tbody tr:hover { background: #141414; }
+    tbody tr:hover { background: var(--bg-hover); }
 
     td {
-      padding: 13px 12px;
+      padding: 12px 10px;
       vertical-align: middle;
     }
 
     .col-name {
       font-weight: 500;
-      color: #e8e8e8;
-      min-width: 200px;
+      color: var(--text-strong);
+      min-width: 160px;
     }
 
     .col-name a {
@@ -79,41 +148,34 @@
     .col-name a:hover { text-decoration: underline; }
 
     .col-git {
-      min-width: 200px;
       font-size: 12px;
       white-space: nowrap;
+      min-width: 180px;
     }
 
     .git-clean   { color: #3fb950; }
     .git-warn    { color: #d29922; }
-    .git-no-repo { color: #3a3a3a; }
+    .git-no-repo { color: var(--text-faint); }
 
-    .col-port { width: 100px; }
+    .col-port { width: 90px; }
 
     .port-input {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      color: #d0d0d0;
+      background: var(--bg-input);
+      border: 1px solid var(--border-input);
+      color: var(--text);
       padding: 5px 8px;
       border-radius: 5px;
-      width: 72px;
+      width: 68px;
       font-size: 13px;
       text-align: center;
       transition: border-color 0.15s;
     }
 
-    .port-input:focus {
-      outline: none;
-      border-color: #444;
-    }
-
-    .port-input:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+    .port-input:focus { outline: none; border-color: var(--border-focus); }
+    .port-input:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .col-status {
-      width: 110px;
+      width: 100px;
       font-size: 12px;
       white-space: nowrap;
     }
@@ -129,43 +191,76 @@
       top: -1px;
     }
 
-    .dot-running {
-      background: #3fb950;
-      box-shadow: 0 0 6px #3fb95066;
-    }
+    .dot-running { background: #3fb950; box-shadow: 0 0 6px #3fb95066; }
+    .dot-stopped { background: var(--dot-stopped); }
 
-    .dot-stopped { background: #2e2e2e; }
-
-    .col-action { text-align: right; width: 110px; }
+    /* Run / Stop button */
+    .col-run { width: 80px; }
 
     .btn {
-      padding: 6px 16px;
+      padding: 5px 14px;
       border-radius: 5px;
       border: none;
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
-      letter-spacing: 0.01em;
       transition: opacity 0.15s;
+      white-space: nowrap;
     }
 
-    .btn:hover { opacity: 0.85; }
-    .btn:active { opacity: 0.7; }
+    .btn:hover  { opacity: 0.82; }
+    .btn:active { opacity: 0.65; }
 
     .btn-run  { background: #238636; color: #fff; }
     .btn-stop { background: #6e1a1a; color: #f08080; }
 
-    footer {
-      margin-top: 28px;
+    /* Icon action buttons */
+    .col-actions { width: 130px; }
+
+    .actions {
+      display: flex;
+      gap: 5px;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      background: var(--icon-btn-bg);
+      border: 1px solid var(--icon-btn-border);
+      color: var(--icon-btn-color);
+      width: 28px;
+      height: 28px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      transition: border-color 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--icon-btn-hover-border);
+      color: var(--icon-btn-hover-color);
+    }
+
+    .icon-btn.disabled {
+      opacity: 0.2;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    footer {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .btn-secondary {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      color: #888;
+      background: var(--btn-sec-bg);
+      border: 1px solid var(--btn-sec-border);
+      color: var(--btn-sec-color);
       padding: 6px 14px;
       border-radius: 5px;
       font-size: 12px;
@@ -174,65 +269,80 @@
       transition: border-color 0.15s, color 0.15s;
     }
 
-    .btn-secondary:hover { border-color: #444; color: #ccc; }
+    .btn-secondary:hover {
+      border-color: var(--btn-sec-hover-border);
+      color: var(--btn-sec-hover-color);
+    }
 
     .footer-info {
       margin-left: auto;
-      color: #333;
+      color: var(--text-faint);
       font-size: 12px;
     }
 
-    .loading { color: #333; padding: 24px 12px; font-size: 13px; }
+    .loading { color: var(--text-faint); padding: 24px 10px; font-size: 13px; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>dev-dashboard</h1>
-    <span id="subtitle">scanning...</span>
-  </header>
+  <div class="container">
+    <header>
+      <h1>dev-dashboard</h1>
+      <span class="subtitle" id="subtitle">scanning...</span>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀ Light</button>
+    </header>
 
-  <table>
-    <thead>
-      <tr>
-        <th>App</th>
-        <th>Git</th>
-        <th>Port</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="app-list">
-      <tr><td class="loading" colspan="5">Loading...</td></tr>
-    </tbody>
-  </table>
+    <table>
+      <thead>
+        <tr>
+          <th>App</th>
+          <th>Git</th>
+          <th>Port</th>
+          <th>Status</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="app-list">
+        <tr><td class="loading" colspan="6">Loading...</td></tr>
+      </tbody>
+    </table>
 
-  <footer>
-    <button class="btn-secondary" onclick="runAll()">Run all</button>
-    <button class="btn-secondary" onclick="stopAll()">Stop all</button>
-    <span class="footer-info" id="footer-info"></span>
-  </footer>
+    <footer>
+      <button class="btn-secondary" onclick="runAll()">Run all</button>
+      <button class="btn-secondary" onclick="stopAll()">Stop all</button>
+      <span class="footer-info" id="footer-info"></span>
+    </footer>
+  </div>
 
   <script>
     let apps = [];
 
-    function gitHtml(git) {
-      if (!git.isRepo) return '<span class="git-no-repo">no git</span>';
+    // --- Theme ---
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
 
-      const uncommitted = git.uncommitted > 0
-        ? `<span class="git-warn">! ${git.uncommitted} uncommitted</span>`
-        : `<span class="git-clean">✓ clean</span>`;
-
-      let pushed = '';
-      if (git.hasUpstream) {
-        pushed = git.unpushed > 0
-          ? ` &nbsp;<span class="git-warn">! ${git.unpushed} unpushed</span>`
-          : ` &nbsp;<span class="git-clean">✓ pushed</span>`;
-      }
-
-      return uncommitted + pushed;
+    function setTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      const btn = document.getElementById('theme-btn');
+      if (btn) btn.textContent = t === 'dark' ? '☀ Light' : '☾ Dark';
+      localStorage.setItem('theme', t);
     }
 
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // --- Git ---
+    function gitHtml(git) {
+      if (!git.isRepo) return '<span class="git-no-repo">no git</span>';
+      return git.uncommitted > 0
+        ? `<span class="git-warn">! ${git.uncommitted} uncommitted</span>`
+        : `<span class="git-clean">✓ committed</span>`;
+    }
+
+    // --- Render ---
     function render() {
       const tbody = document.getElementById('app-list');
       const runningCount = apps.filter(a => a.running).length;
@@ -242,7 +352,7 @@
         `${runningCount} running / ${apps.length} total`;
 
       if (!apps.length) {
-        tbody.innerHTML = '<tr><td class="loading" colspan="5">No runnable apps found.</td></tr>';
+        tbody.innerHTML = '<tr><td class="loading" colspan="6">No runnable apps found.</td></tr>';
         return;
       }
 
@@ -251,8 +361,7 @@
           <td class="col-name">
             ${app.running
               ? `<a href="http://localhost:${app.port}" target="_blank">${app.name}</a>`
-              : app.name
-            }
+              : app.name}
           </td>
           <td class="col-git">${gitHtml(app.git)}</td>
           <td class="col-port">
@@ -260,8 +369,7 @@
               class="port-input"
               type="number"
               value="${app.port}"
-              min="1024"
-              max="65535"
+              min="1024" max="65535"
               ${app.running ? 'disabled' : ''}
               onchange="updatePort('${app.name}', this.value)"
             />
@@ -270,16 +378,29 @@
             <span class="dot ${app.running ? 'dot-running' : 'dot-stopped'}"></span>
             ${app.running ? 'running' : 'stopped'}
           </td>
-          <td class="col-action">
+          <td class="col-run">
             ${app.running
               ? `<button class="btn btn-stop" onclick="stopApp('${app.name}')">Stop ■</button>`
-              : `<button class="btn btn-run"  onclick="startApp('${app.name}')">Run ▶</button>`
-            }
+              : `<button class="btn btn-run"  onclick="startApp('${app.name}')">Run ▶</button>`}
+          </td>
+          <td class="col-actions">
+            <div class="actions">
+              <button class="icon-btn" onclick="openAction('${app.name}','terminal')" title="Open in Terminal">⌨</button>
+              <button class="icon-btn" onclick="openAction('${app.name}','editor')"   title="Open in VS Code">⟨/⟩</button>
+              <button class="icon-btn" onclick="openAction('${app.name}','finder')"   title="Reveal in Finder">⌂</button>
+              <a
+                class="icon-btn ${app.running ? '' : 'disabled'}"
+                href="http://localhost:${app.port}"
+                target="_blank"
+                title="Open in Browser"
+              >↗</a>
+            </div>
           </td>
         </tr>
       `).join('');
     }
 
+    // --- API calls ---
     async function fetchApps() {
       try {
         const res = await fetch('/api/apps');
@@ -306,6 +427,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ port: parseInt(port) })
       });
+    }
+
+    async function openAction(name, action) {
+      await fetch(`/api/apps/${encodeURIComponent(name)}/open/${action}`, { method: 'POST' });
     }
 
     async function runAll() {

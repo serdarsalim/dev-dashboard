@@ -77,18 +77,11 @@ async function getGitStatus(appDir) {
     return { isRepo: false };
   }
 
-  const status = { isRepo: true, uncommitted: 0, unpushed: 0, hasUpstream: false };
+  const status = { isRepo: true, uncommitted: 0 };
 
   try {
     const { stdout } = await execAsync(`git -C "${appDir}" status --porcelain`);
     status.uncommitted = stdout.trim().split('\n').filter(Boolean).length;
-  } catch {}
-
-  try {
-    await execAsync(`git -C "${appDir}" rev-parse @{u}`);
-    status.hasUpstream = true;
-    const { stdout } = await execAsync(`git -C "${appDir}" log @{u}..HEAD --oneline`);
-    status.unpushed = stdout.trim().split('\n').filter(Boolean).length;
   } catch {}
 
   return status;
@@ -154,6 +147,44 @@ app.put('/api/apps/:name/port', (req, res) => {
   ports[name] = parseInt(port);
   savePorts(ports);
   res.json({ updated: true });
+});
+
+// --- Open actions ---
+
+app.post('/api/apps/:name/open/terminal', (req, res) => {
+  const appDir = path.join(PORTFOLIO_DIR, req.params.name);
+  // Try iTerm2 first, fall back to Terminal.app
+  const script = `
+    tell application "System Events"
+      if (count of (processes whose name is "iTerm2")) > 0 then
+        tell application "iTerm2"
+          tell current window
+            create tab with default profile command "cd \\"${appDir}\\" && clear"
+          end tell
+        end tell
+      else
+        tell application "Terminal"
+          do script "cd \\"${appDir}\\""
+          activate
+        end tell
+      end if
+    end tell
+  `;
+  exec(`osascript -e '${script.replace(/'/g, "'\"'\"'")}'`);
+  res.json({ ok: true });
+});
+
+app.post('/api/apps/:name/open/editor', (req, res) => {
+  const appDir = path.join(PORTFOLIO_DIR, req.params.name);
+  exec(`code "${appDir}"`, err => {
+    if (err) exec(`open -a "Cursor" "${appDir}"`);
+  });
+  res.json({ ok: true });
+});
+
+app.post('/api/apps/:name/open/finder', (req, res) => {
+  exec(`open "${path.join(PORTFOLIO_DIR, req.params.name)}"`);
+  res.json({ ok: true });
 });
 
 app.post('/api/stop-all', (req, res) => {
