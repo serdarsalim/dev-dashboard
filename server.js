@@ -153,32 +153,16 @@ app.put('/api/apps/:name/port', (req, res) => {
 
 app.post('/api/apps/:name/open/terminal', (req, res) => {
   const appDir = path.join(PORTFOLIO_DIR, req.params.name);
-  // Try iTerm2 first, fall back to Terminal.app
-  const script = `
-    tell application "System Events"
-      if (count of (processes whose name is "iTerm2")) > 0 then
-        tell application "iTerm2"
-          tell current window
-            create tab with default profile command "cd \\"${appDir}\\" && clear"
-          end tell
-        end tell
-      else
-        tell application "Terminal"
-          do script "cd \\"${appDir}\\""
-          activate
-        end tell
-      end if
-    end tell
-  `;
-  exec(`osascript -e '${script.replace(/'/g, "'\"'\"'")}'`);
+  const { execFile } = require('child_process');
+  const script = `tell application "Terminal" to do script "cd \\"${appDir}\\""\ntell application "Terminal" to activate`;
+  execFile('osascript', ['-e', script]);
   res.json({ ok: true });
 });
 
 app.post('/api/apps/:name/open/editor', (req, res) => {
   const appDir = path.join(PORTFOLIO_DIR, req.params.name);
-  exec(`code "${appDir}"`, err => {
-    if (err) exec(`open -a "Cursor" "${appDir}"`);
-  });
+  const { execFile } = require('child_process');
+  execFile('/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code', [appDir]);
   res.json({ ok: true });
 });
 
