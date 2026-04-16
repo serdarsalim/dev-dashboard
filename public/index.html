@@ -312,6 +312,7 @@
     <footer>
       <button class="btn-secondary" onclick="runAll()">Run all</button>
       <button class="btn-secondary" onclick="stopAll()">Stop all</button>
+      <button class="btn-secondary" id="restart-btn" onclick="restartDashboard()">Restart dashboard</button>
       <span class="footer-info" id="footer-info"></span>
     </footer>
   </div>
@@ -445,6 +446,29 @@
     async function stopAll() {
       await fetch('/api/stop-all', { method: 'POST' });
       await fetchApps();
+    }
+
+    async function restartDashboard() {
+      const btn = document.getElementById('restart-btn');
+      btn.textContent = 'Restarting...';
+      btn.disabled = true;
+      document.getElementById('subtitle').textContent = 'restarting...';
+
+      try { await fetch('/api/restart', { method: 'POST' }); } catch {}
+
+      // Poll until server is back up
+      const poll = setInterval(async () => {
+        try {
+          const res = await fetch('/api/apps');
+          if (res.ok) {
+            clearInterval(poll);
+            btn.textContent = 'Restart dashboard';
+            btn.disabled = false;
+            apps = await res.json();
+            render();
+          }
+        } catch {}
+      }, 800);
     }
 
     fetchApps();

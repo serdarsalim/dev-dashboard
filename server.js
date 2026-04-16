@@ -179,6 +179,24 @@ app.post('/api/stop-all', (req, res) => {
   res.json({ stopped: true });
 });
 
+app.post('/api/restart', (req, res) => {
+  // Kill all running apps
+  for (const name of Object.keys(running)) {
+    try { process.kill(-running[name].proc.pid, 'SIGTERM'); } catch { running[name].proc.kill('SIGTERM'); }
+    delete running[name];
+  }
+  res.json({ restarting: true });
+  // Spawn fresh instance then exit
+  setTimeout(() => {
+    spawn('node', [__filename], {
+      detached: true,
+      stdio: 'inherit',
+      cwd: __dirname
+    }).unref();
+    process.exit(0);
+  }, 300);
+});
+
 // --- Startup cleanup ---
 
 async function cleanup() {
