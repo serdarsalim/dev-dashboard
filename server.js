@@ -179,6 +179,38 @@ app.post('/api/stop-all', (req, res) => {
   res.json({ stopped: true });
 });
 
-app.listen(DASHBOARD_PORT, () => {
+// --- Startup cleanup ---
+
+async function cleanup() {
+  const appNames = scanApps();
+  const ports = loadPorts();
+
+  await Promise.all(appNames.map(async name => {
+    const appDir = path.join(PORTFOLIO_DIR, name);
+
+    // Clear stale Next.js dev lock
+    const lockFile = path.join(appDir, '.next', 'dev', 'lock');
+    if (fs.existsSync(lockFile)) {
+      fs.rmSync(lockFile);
+      console.log(`  cleared lock: ${name}`);
+    }
+
+    // Free up assigned port if something is still holding it
+    const port = ports[name];
+    if (port) {
+      try {
+        const { stdout } = await execAsync(`lsof -ti :${port}`);
+        const pids = stdout.trim().split('\n').filter(Boolean);
+        for (const pid of pids) {
+          process.kill(parseInt(pid), 'SIGTERM');
+          console.log(`  freed port ${port} (pid ${pid}) for ${name}`);
+        }
+      } catch { /* port was already free */ }
+    }
+  }));
+}
+
+app.listen(DASHBOARD_PORT, async () => {
+  await cleanup();
   console.log(`\n  dev-dashboard → http://localhost:${DASHBOARD_PORT}\n`);
 });
