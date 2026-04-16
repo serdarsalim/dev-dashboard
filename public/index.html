@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dev-dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #d0d0d0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      padding: 40px 48px;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    header span {
+      color: #444;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 500;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0 12px 10px;
+      border-bottom: 1px solid #1e1e1e;
+    }
+
+    thead th:last-child { text-align: right; }
+
+    tbody tr {
+      border-bottom: 1px solid #161616;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: #141414; }
+
+    td {
+      padding: 13px 12px;
+      vertical-align: middle;
+    }
+
+    .col-name {
+      font-weight: 500;
+      color: #e8e8e8;
+      min-width: 200px;
+    }
+
+    .col-name a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+
+    .col-name a:hover { text-decoration: underline; }
+
+    .col-git {
+      min-width: 200px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .git-clean   { color: #3fb950; }
+    .git-warn    { color: #d29922; }
+    .git-no-repo { color: #3a3a3a; }
+
+    .col-port { width: 100px; }
+
+    .port-input {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #d0d0d0;
+      padding: 5px 8px;
+      border-radius: 5px;
+      width: 72px;
+      font-size: 13px;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+
+    .port-input:focus {
+      outline: none;
+      border-color: #444;
+    }
+
+    .port-input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .col-status {
+      width: 110px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+
+    .dot-running {
+      background: #3fb950;
+      box-shadow: 0 0 6px #3fb95066;
+    }
+
+    .dot-stopped { background: #2e2e2e; }
+
+    .col-action { text-align: right; width: 110px; }
+
+    .btn {
+      padding: 6px 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+
+    .btn-run  { background: #238636; color: #fff; }
+    .btn-stop { background: #6e1a1a; color: #f08080; }
+
+    footer {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #888;
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { border-color: #444; color: #ccc; }
+
+    .footer-info {
+      margin-left: auto;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .loading { color: #333; padding: 24px 12px; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>dev-dashboard</h1>
+    <span id="subtitle">scanning...</span>
+  </header>
+
+  <table>
+    <thead>
+      <tr>
+        <th>App</th>
+        <th>Git</th>
+        <th>Port</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="app-list">
+      <tr><td class="loading" colspan="5">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    <button class="btn-secondary" onclick="runAll()">Run all</button>
+    <button class="btn-secondary" onclick="stopAll()">Stop all</button>
+    <span class="footer-info" id="footer-info"></span>
+  </footer>
+
+  <script>
+    let apps = [];
+
+    function gitHtml(git) {
+      if (!git.isRepo) return '<span class="git-no-repo">no git</span>';
+
+      const uncommitted = git.uncommitted > 0
+        ? `<span class="git-warn">! ${git.uncommitted} uncommitted</span>`
+        : `<span class="git-clean">✓ clean</span>`;
+
+      let pushed = '';
+      if (git.hasUpstream) {
+        pushed = git.unpushed > 0
+          ? ` &nbsp;<span class="git-warn">! ${git.unpushed} unpushed</span>`
+          : ` &nbsp;<span class="git-clean">✓ pushed</span>`;
+      }
+
+      return uncommitted + pushed;
+    }
+
+    function render() {
+      const tbody = document.getElementById('app-list');
+      const runningCount = apps.filter(a => a.running).length;
+
+      document.getElementById('subtitle').textContent = `${apps.length} apps`;
+      document.getElementById('footer-info').textContent =
+        `${runningCount} running / ${apps.length} total`;
+
+      if (!apps.length) {
+        tbody.innerHTML = '<tr><td class="loading" colspan="5">No runnable apps found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = apps.map(app => `
+        <tr>
+          <td class="col-name">
+            ${app.running
+              ? `<a href="http://localhost:${app.port}" target="_blank">${app.name}</a>`
+              : app.name
+            }
+          </td>
+          <td class="col-git">${gitHtml(app.git)}</td>
+          <td class="col-port">
+            <input
+              class="port-input"
+              type="number"
+              value="${app.port}"
+              min="1024"
+              max="65535"
+              ${app.running ? 'disabled' : ''}
+              onchange="updatePort('${app.name}', this.value)"
+            />
+          </td>
+          <td class="col-status">
+            <span class="dot ${app.running ? 'dot-running' : 'dot-stopped'}"></span>
+            ${app.running ? 'running' : 'stopped'}
+          </td>
+          <td class="col-action">
+            ${app.running
+              ? `<button class="btn btn-stop" onclick="stopApp('${app.name}')">Stop ■</button>`
+              : `<button class="btn btn-run"  onclick="startApp('${app.name}')">Run ▶</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function fetchApps() {
+      try {
+        const res = await fetch('/api/apps');
+        apps = await res.json();
+        render();
+      } catch {
+        document.getElementById('subtitle').textContent = 'server unreachable';
+      }
+    }
+
+    async function startApp(name) {
+      await fetch(`/api/apps/${encodeURIComponent(name)}/start`, { method: 'POST' });
+      await fetchApps();
+    }
+
+    async function stopApp(name) {
+      await fetch(`/api/apps/${encodeURIComponent(name)}/stop`, { method: 'POST' });
+      await fetchApps();
+    }
+
+    async function updatePort(name, port) {
+      await fetch(`/api/apps/${encodeURIComponent(name)}/port`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ port: parseInt(port) })
+      });
+    }
+
+    async function runAll() {
+      const stopped = apps.filter(a => !a.running);
+      await Promise.all(stopped.map(a =>
+        fetch(`/api/apps/${encodeURIComponent(a.name)}/start`, { method: 'POST' })
+      ));
+      await fetchApps();
+    }
+
+    async function stopAll() {
+      await fetch('/api/stop-all', { method: 'POST' });
+      await fetchApps();
+    }
+
+    fetchApps();
+    setInterval(fetchApps, 3000);
+  </script>
+
+</body>
+</html>

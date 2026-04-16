@@ -1,0 +1,12 @@
+{
+  "name": "dev-dashboard",
+  "version": "1.0.0",
+  "description": "Local dev dashboard for managing portfolio apps",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
